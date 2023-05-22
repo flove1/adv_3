@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	"advanced.microservices/pkg/store/postgres/validator"
+	"advanced.microservices/pkg/validator"
 )
 
 type Contact struct {
