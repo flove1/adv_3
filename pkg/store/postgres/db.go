@@ -3,21 +3,20 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	"time"
 
 	_ "github.com/lib/pq"
 )
 
-func OpenDB(host string, port string, user string, password string, dbname string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", user, password, host, port, dbname))
+func OpenDB(dsn string, maxOpenConns int, maxIdleConns int, maxIdleTime string) (*sql.DB, error) {
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	db.SetMaxOpenConns(4)
-	db.SetMaxIdleConns(10)
-	duration, err := time.ParseDuration("1m")
+	db.SetMaxOpenConns(maxOpenConns)
+	db.SetMaxIdleConns(maxIdleConns)
+	duration, err := time.ParseDuration(maxIdleTime)
 
 	if err != nil {
 		return nil, err
