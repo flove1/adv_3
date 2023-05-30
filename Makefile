@@ -20,7 +20,7 @@ confirm:
 ## run/api: run the application
 .PHONY: run
 run:
-	@go run ./src/api -db-dsn=${DB_DSN}
+	@go run ./services/contact/cmd -db-dsn=${DB_DSN}
 
 ## db/psql: connect to the database using psql
 .PHONY: psql

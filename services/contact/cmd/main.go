@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -55,13 +54,13 @@ func main() {
 	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
 	flag.Parse()
 
+	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
+
 	db, err := postgres.OpenDB(cfg.db.dsn, cfg.db.maxOpenConns, cfg.db.maxIdleConns, cfg.db.maxIdleTime)
 	if err != nil {
-		fmt.Printf("Error connecting to database")
+		log.Fatalf(err.Error())
 	}
 	defer db.Close()
-
-	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
 
 	repositories := &repositories{
 		contactRepository: repository.NewContactRepository(db),
@@ -80,5 +79,6 @@ func main() {
 		useCases:     useCases,
 		// mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
+
 	log.Printf("Success, launched on %d", app.config.port)
 }
