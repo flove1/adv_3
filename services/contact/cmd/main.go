@@ -54,6 +54,10 @@ func main() {
 	contactUseCase := useCase.NewContactUsecase(contactRepository, 6*time.Second)
 	delivery.NewContactHandler(router, logger, contactUseCase)
 
+	groupRepository := repository.NewGroupRepository(db)
+	groupUseCase := useCase.NewGroupUsecase(groupRepository, 6*time.Second)
+	delivery.NewGroupHandler(router, logger, groupUseCase)
+
 	service := &service{
 		config: cfg,
 		db:     db,
