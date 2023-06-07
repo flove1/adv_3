@@ -2,7 +2,6 @@ package delivery
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"advanced.microservices/pkg/jsonlog"
@@ -62,11 +61,6 @@ func (handler *responseHandler) badRequestResponse(w http.ResponseWriter, r *htt
 func (handler *responseHandler) notFoundResponse(w http.ResponseWriter, r *http.Request) {
 	message := "the requested resource could not be found"
 	handler.errorResponse(w, r, http.StatusNotFound, message)
-}
-
-func (handler *responseHandler) methodNotAllowedResponse(w http.ResponseWriter, r *http.Request) {
-	message := fmt.Sprintf("the %s method is not supported for this resource", r.Method)
-	handler.errorResponse(w, r, http.StatusMethodNotAllowed, message)
 }
 
 func (handler *responseHandler) failedValidationResponse(w http.ResponseWriter, r *http.Request, errors map[string]string) {
