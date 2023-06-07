@@ -1,46 +1,34 @@
 package main
 
 import (
+	"database/sql"
 	"flag"
-	"log"
+	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"advanced.microservices/pkg/jsonlog"
+	"advanced.microservices/pkg/store"
 	"advanced.microservices/pkg/store/postgres"
-	"advanced.microservices/services/contact/internal/domain"
+	"advanced.microservices/services/contact/internal/delivery"
 	"advanced.microservices/services/contact/internal/repository"
 	"advanced.microservices/services/contact/internal/useCase"
+	"github.com/julienschmidt/httprouter"
 )
 
 type config struct {
 	port int
 	env  string
-	db   struct {
-		dsn          string
-		maxOpenConns int
-		maxIdleConns int
-		maxIdleTime  string
-	}
+	db   store.DbConfig
 }
 
-type repositories struct {
-	contactRepository domain.ContactRepository
-	groupRepository   domain.GroupRepository
-}
-
-type useCases struct {
-	contactUseCase domain.ContactUseCase
-	groupUseCase   domain.GroupUseCase
-}
-
-type application struct {
-	config       config
-	logger       *jsonlog.Logger
-	repositories *repositories
-	useCases     *useCases
-	// mailer mailer.Mailer
-	// wg sync.WaitGroup
+type service struct {
+	config config
+	logger *jsonlog.Logger
+	wg     *sync.WaitGroup
+	db     *sql.DB
+	router *httprouter.Router
 }
 
 func main() {
@@ -48,37 +36,34 @@ func main() {
 
 	flag.IntVar(&cfg.port, "port", 4000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
-	flag.StringVar(&cfg.db.dsn, "db-dsn", "", "PostgreSQL DSN")
-	flag.IntVar(&cfg.db.maxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
-	flag.IntVar(&cfg.db.maxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
-	flag.StringVar(&cfg.db.maxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
+	flag.StringVar(&cfg.db.Dsn, "db-dsn", "", "PostgreSQL DSN")
+	flag.IntVar(&cfg.db.MaxOpenConns, "db-max-open-conns", 25, "PostgreSQL max open connections")
+	flag.IntVar(&cfg.db.MaxIdleConns, "db-max-idle-conns", 25, "PostgreSQL max idle connections")
+	flag.StringVar(&cfg.db.MaxIdleTime, "db-max-idle-time", "15m", "PostgreSQL max connection idle time")
 	flag.Parse()
 
-	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
-
-	db, err := postgres.OpenDB(cfg.db.dsn, cfg.db.maxOpenConns, cfg.db.maxIdleConns, cfg.db.maxIdleTime)
+	db, err := postgres.OpenDB(cfg.db)
 	if err != nil {
-		log.Fatalf(err.Error())
-	}
-	defer db.Close()
-
-	repositories := &repositories{
-		contactRepository: repository.NewContactRepository(db),
-		groupRepository:   repository.NewGroupRepository(db),
+		fmt.Println("Error while opening DB " + err.Error())
+		return
 	}
 
-	useCases := &useCases{
-		contactUseCase: useCase.NewContactUsecase(repositories.contactRepository, time.Minute),
-		groupUseCase:   useCase.NewGroupUsecase(repositories.groupRepository, time.Minute),
-	}
+	logger := jsonlog.New(os.Stdout, jsonlog.LevelInfo)
+	router := httprouter.New()
+	contactRepository := repository.NewContactRepository(db)
+	contactUseCase := useCase.NewContactUsecase(contactRepository, 6*time.Second)
+	delivery.NewContactHandler(router, logger, contactUseCase)
 
-	app := &application{
-		config:       cfg,
-		logger:       logger,
-		repositories: repositories,
-		useCases:     useCases,
+	service := &service{
+		config: cfg,
+		db:     db,
+		logger: logger,
+		router: router,
 		// mailer: mailer.New(cfg.smtp.host, cfg.smtp.port, cfg.smtp.username, cfg.smtp.password, cfg.smtp.sender),
 	}
 
-	log.Printf("Success, launched on %d", app.config.port)
+	err = service.serve()
+	if err != nil {
+		logger.PrintFatal(err, nil)
+	}
 }

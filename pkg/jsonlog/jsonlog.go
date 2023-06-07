@@ -3,6 +3,7 @@ package jsonlog
 import (
 	"encoding/json"
 	"io"
+	"net/http"
 	"os"
 	"runtime/debug"
 	"sync"
@@ -53,6 +54,13 @@ func (l *Logger) PrintError(err error, properties map[string]string) {
 func (l *Logger) PrintFatal(err error, properties map[string]string) {
 	l.print(LevelFatal, err.Error(), properties)
 	os.Exit(1)
+}
+
+func (l *Logger) PrintErrorRequest(r *http.Request, err error) {
+	l.PrintError(err, map[string]string{
+		"request_method": r.Method,
+		"request_url":    r.URL.String(),
+	})
 }
 
 func (l *Logger) print(level Level, message string, properties map[string]string) (int, error) {

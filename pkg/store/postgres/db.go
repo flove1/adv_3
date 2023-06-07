@@ -5,18 +5,19 @@ import (
 	"database/sql"
 	"time"
 
+	"advanced.microservices/pkg/store"
 	_ "github.com/lib/pq"
 )
 
-func OpenDB(dsn string, maxOpenConns int, maxIdleConns int, maxIdleTime string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", dsn)
+func OpenDB(cfg store.DbConfig) (*sql.DB, error) {
+	db, err := sql.Open("postgres", cfg.Dsn)
 	if err != nil {
 		return nil, err
 	}
 
-	db.SetMaxOpenConns(maxOpenConns)
-	db.SetMaxIdleConns(maxIdleConns)
-	duration, err := time.ParseDuration(maxIdleTime)
+	db.SetMaxOpenConns(cfg.MaxOpenConns)
+	db.SetMaxIdleConns(cfg.MaxIdleConns)
+	duration, err := time.ParseDuration(cfg.MaxIdleTime)
 
 	if err != nil {
 		return nil, err

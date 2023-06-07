@@ -12,35 +12,33 @@ type groupUsecase struct {
 	contextTimeout time.Duration
 }
 
-// NewArticleUsecase will create new an articleUsecase object representation of domain.ArticleUsecase interface
+// Create implements domain.GroupUseCase
+func (uc *groupUsecase) Create(group *domain.Group) error {
+	ctx, cancel := context.WithTimeout(context.Background(), uc.contextTimeout)
+	defer cancel()
+
+	return uc.groupRepo.Update(group, ctx)
+}
+
+// GetByID implements domain.GroupUseCase
+func (uc *groupUsecase) GetByID(id int64) (*domain.Group, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), uc.contextTimeout)
+	defer cancel()
+
+	return uc.groupRepo.GetByID(id, ctx)
+}
+
+// Update implements domain.GroupUseCase
+func (uc *groupUsecase) Update(group *domain.Group) error {
+	ctx, cancel := context.WithTimeout(context.Background(), uc.contextTimeout)
+	defer cancel()
+
+	return uc.groupRepo.Update(group, ctx)
+}
+
 func NewGroupUsecase(c domain.GroupRepository, timeout time.Duration) domain.GroupUseCase {
 	return &groupUsecase{
 		groupRepo:      c,
 		contextTimeout: timeout,
 	}
-}
-
-// GetByID implements domain.GroupUseCase
-func (*groupUsecase) GetByID(ctx context.Context, id int64) (domain.Group, error) {
-	panic("unimplemented")
-}
-
-// GetByPhone implements domain.GroupUseCase
-func (*groupUsecase) GetByPhone(ctx context.Context, title string) (domain.Group, error) {
-	panic("unimplemented")
-}
-
-// List implements domain.GroupUseCase
-func (*groupUsecase) List(ctx context.Context) ([]domain.Group, error) {
-	panic("unimplemented")
-}
-
-// Update implements domain.GroupUseCase
-func (*groupUsecase) Update(ctx context.Context, contact *domain.Group) error {
-	panic("unimplemented")
-}
-
-// Delete implements domain.GroupUseCase
-func (*groupUsecase) Delete(ctx context.Context, id int64) error {
-	panic("unimplemented")
 }

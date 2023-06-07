@@ -12,35 +12,41 @@ type contactUsecase struct {
 	contextTimeout time.Duration
 }
 
-// NewArticleUsecase will create new an articleUsecase object representation of domain.ArticleUsecase interface
+// Create implements domain.ContactUseCase
+func (uc *contactUsecase) Create(contact *domain.Contact) error {
+	ctx, cancel := context.WithTimeout(context.Background(), uc.contextTimeout)
+	defer cancel()
+
+	return uc.contactRepo.Create(contact, ctx)
+}
+
+// Delete implements domain.ContactUseCase
+func (uc *contactUsecase) Delete(id int64) error {
+	ctx, cancel := context.WithTimeout(context.Background(), uc.contextTimeout)
+	defer cancel()
+
+	return uc.contactRepo.Delete(id, ctx)
+}
+
+// GetByID implements domain.ContactUseCase
+func (uc *contactUsecase) GetByID(id int64) (*domain.Contact, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), uc.contextTimeout)
+	defer cancel()
+
+	return uc.contactRepo.GetByID(id, ctx)
+}
+
+// Update implements domain.ContactUseCase
+func (uc *contactUsecase) Update(contact *domain.Contact) error {
+	ctx, cancel := context.WithTimeout(context.Background(), uc.contextTimeout)
+	defer cancel()
+
+	return uc.contactRepo.Update(contact, ctx)
+}
+
 func NewContactUsecase(c domain.ContactRepository, timeout time.Duration) domain.ContactUseCase {
 	return &contactUsecase{
 		contactRepo:    c,
 		contextTimeout: timeout,
 	}
-}
-
-// GetByID implements domain.ContactUseCase
-func (*contactUsecase) GetByID(ctx context.Context, id int64) (domain.Contact, error) {
-	panic("unimplemented")
-}
-
-// GetByPhone implements domain.ContactUseCase
-func (*contactUsecase) GetByPhone(ctx context.Context, title string) (domain.Contact, error) {
-	panic("unimplemented")
-}
-
-// List implements domain.ContactUseCase
-func (*contactUsecase) List(ctx context.Context) ([]domain.Contact, error) {
-	panic("unimplemented")
-}
-
-// Update implements domain.ContactUseCase
-func (*contactUsecase) Update(ctx context.Context, contact *domain.Contact) error {
-	panic("unimplemented")
-}
-
-// Delete implements domain.ContactUseCase
-func (*contactUsecase) Delete(ctx context.Context, id int64) error {
-	panic("unimplemented")
 }

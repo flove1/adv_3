@@ -4,36 +4,34 @@ import (
 	"context"
 	"regexp"
 	"strings"
+	"time"
 
 	"advanced.microservices/pkg/validator"
 )
 
 type Contact struct {
-	ID       int64  `json:"id"`
-	FullName string `json:"full_name"`
-	Phone    string `json:"phone"`
+	ID        int64     `json:"id"`
+	FullName  string    `json:"full_name"`
+	Phone     string    `json:"phone"`
+	CreatedAt time.Time `json:"created_at"`
+	Version   int32     `json:"version"`
 }
 
 type ContactRepository interface {
-	GetByID(ctx context.Context, id int64) (Contact, error)
-	GetByPhone(ctx context.Context, title string) (Contact, error)
-	List(ctx context.Context) ([]Contact, error)
-	Update(ctx context.Context, contact *Contact) error
-	Delete(ctx context.Context, id int64) error
+	Create(contact *Contact, ctx context.Context) error
+	GetByID(id int64, ctx context.Context) (*Contact, error)
+	Update(contact *Contact, ctx context.Context) error
+	Delete(id int64, ctx context.Context) error
 }
 
 type ContactUseCase interface {
-	GetByID(ctx context.Context, id int64) (Contact, error)
-	GetByPhone(ctx context.Context, title string) (Contact, error)
-	List(ctx context.Context) ([]Contact, error)
-	Update(ctx context.Context, contact *Contact) error
-	Delete(ctx context.Context, id int64) error
+	Create(contact *Contact) error
+	GetByID(id int64) (*Contact, error)
+	Update(contact *Contact) error
+	Delete(id int64) error
 }
 
-func ValidateFullName(v *validator.Validator, fullName string) {
-	v.Check(len(strings.Split(fullName, " ")) == 3, "full name", "full name must contain 3 parts")
-}
-
-func ValidatePhone(v *validator.Validator, phone string) {
-	v.Check(validator.Matches(phone, regexp.MustCompile(`[0-9\[\]\(\\)\+\-]`)), "email", "must be a valid email address")
+func ValidateContact(v *validator.Validator, contact *Contact) {
+	v.Check(len(strings.Split(contact.FullName, " ")) == 3, "full name", "full name must contain 3 parts")
+	v.Check(validator.Matches(contact.Phone, regexp.MustCompile(`[0-9\[\]\(\\)\+\-]`)), "email", "must be a valid phone number")
 }

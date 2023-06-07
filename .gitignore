@@ -1,4 +1,4 @@
-.vscode/*
+.vscode/**
 .envrc
 
 services/contact/protobuf/*.pb.go
